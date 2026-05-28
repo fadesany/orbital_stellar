@@ -31,8 +31,7 @@ All three packages are feature-complete for Phase 0 scope and ready for use agai
 | React hooks (`useStellarEvent`, `useStellarPayment`, `useStellarActivity`) | ✅ Done | Type-narrowing generic on `useStellarEvent`, multi-event subscription, stable config rules |
 | Custom Horizon URL override | ✅ Done | `CoreConfig.horizonUrl` for self-hosted nodes / regional mirrors / futurenet |
 | Engine lifecycle notifications | ✅ Done | `engine.reconnecting`, `engine.reconnected`, `engine.rate_limited`, `engine.stopped` |
-| Public marketing + documentation site (`apps/web`) | ✅ Done | Next.js, Tailwind CSS 4, full docs and live demos |
-| Reference server (`apps/server`) | ✅ Done | Express composition of `pulse-core` + `pulse-webhooks` — a worked example, not a production pitch |
+| Public marketing + documentation site (`apps/web`) | ✅ Done | Next.js 16, Tailwind CSS 4. Hosts the docs, the sandboxed `/api/events/[address]` SSE demo, and the `/api/webhook-sample` signing demo. |
 | Testnet + mainnet support | ✅ Done | Network selector via `network: "mainnet" \| "testnet"` |
 | CI/CD pipeline | ✅ Done | GitHub Actions on Node 20 and 22, CodeQL, Dependabot |
 | MIT License & open-source setup | ✅ Done | `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md` |
@@ -48,8 +47,7 @@ orbital_stellar/
 │   ├── pulse-webhooks/    # HMAC webhook delivery + verification
 │   └── pulse-notify/      # React hooks
 ├── apps/
-│   ├── server/            # Reference Express composition (development example)
-│   └── web/               # Marketing + documentation site (deployed to Vercel)
+│   └── web/               # Marketing + docs site + sandboxed demo API routes (Vercel)
 ├── docs/
 │   └── proposal.md        # SCF Infrastructure Grant proposal
 ├── README.md              # Project overview
@@ -90,13 +88,13 @@ See [`packages/pulse-notify/README.md`](./packages/pulse-notify/README.md).
 
 ---
 
-## Reference Implementation: `apps/server`
+## Reference Composition: `apps/web` API routes
 
-`apps/server` is a working Express composition of `pulse-core` + `pulse-webhooks` — a fork-and-modify starting point for teams who want to see the SDKs wired together end-to-end. It is **not** Orbital's production hosting story.
+The marketing site hosts two sandboxed API routes — `app/api/events/[address]/route.ts` and `app/api/webhook-sample/route.ts` — that show how the SDKs wire together end-to-end. They are intentionally limited (one concurrent stream per IP, 25s session cap, 20s webhook-sample cooldown) so the public demo cannot exhaust Vercel resources. The limits surface upgrade-to-Cloud prompts when tripped.
 
 For production, you have two paths:
 
-1. **Build your own backend** — install the SDKs, wire them into your existing Node.js or edge worker, deploy on the infrastructure you already operate.
+1. **Build your own backend** — install the SDKs, wire them into your existing Node.js or edge worker, deploy on the infrastructure you already operate. The `apps/web/lib/engine.ts` + route handlers are a copy-paste starting point.
 2. **Use Orbital Cloud (in development)** — managed runtime that handles multi-region orchestration, persistent webhook registries, replay, and observability. Out of scope for this repository.
 
 ---
@@ -117,11 +115,8 @@ pnpm test
 # Run integration tests (requires INTEGRATION_TESTS=true)
 pnpm test:integration
 
-# Run docs site
-pnpm --filter orbital/web dev
-
-# Run reference server
-NETWORK=testnet API_KEY=dev-key pnpm --filter @orbital/server dev
+# Run the docs site + sandboxed demo API
+NEXT_PUBLIC_NETWORK=testnet pnpm --filter orbital/web dev
 ```
 
 ---
