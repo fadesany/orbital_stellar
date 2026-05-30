@@ -26,7 +26,7 @@ In scope:
 - `packages/pulse-core` — SSE stream handling, event normalization
 - `packages/pulse-webhooks` — HMAC signing, delivery, SSRF protections, edge-runtime verification
 - `packages/pulse-notify` — React hooks
-- Cookie-based SSE auth via `withCredentials` depends on same-site `httpOnly` cookies set by the backend — never store session tokens in `localStorage` for SSE auth. See [packages/pulse-notify/README.md](/home/temycodes/Desktop/orbital_stellar/packages/pulse-notify/README.md) for usage.
+- Cookie-based SSE auth via `withCredentials` depends on same-site `httpOnly` cookies set by the backend — never store session tokens in `localStorage` for SSE auth.See [packages/pulse-notify/README.md](packages/pulse-notify/README.md) for usage.
 
 Out of scope:
 - Vulnerabilities in third-party dependencies (report upstream; open a Dependabot advisory here if you want to track it)
