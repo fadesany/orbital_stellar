@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { NormalizedEvent } from "@orbital/pulse-core";
 
 export type UseEventConfig = {
@@ -7,6 +7,7 @@ export type UseEventConfig = {
   event?: string | string[]; // "*" = all events; array = allowlist of types
   /** API key forwarded as ?token= query param — required when the server has authentication enabled */
   token?: string;
+  filter?: (event: NormalizedEvent) => boolean;
 };
 
 export type EventState<T extends NormalizedEvent = NormalizedEvent> = {
@@ -21,12 +22,12 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
 export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
   serverUrl: string,
   address: string,
-  options?: Pick<UseEventConfig, "event" | "token">
+  options?: Pick<UseEventConfig, "event" | "token" | "filter">
 ): EventState<T>;
 export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
   configOrUrl: UseEventConfig | string,
   address?: string,
-  options?: Pick<UseEventConfig, "event" | "token">
+  options?: Pick<UseEventConfig, "event" | "token" | "filter">
 ): EventState<T> {
   // Normalise the two call signatures down to four primitives.
   const serverUrl =
@@ -41,6 +42,10 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
     typeof configOrUrl === "string"
       ? options?.token
       : configOrUrl.token;
+  const filter =
+    typeof configOrUrl === "string"
+      ? options?.filter
+      : configOrUrl.filter;
 
   // Serialise eventType to a stable string for the dep array.
   // An array literal passed by the caller would otherwise be a new reference
@@ -48,6 +53,11 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
   const eventKey = Array.isArray(eventType)
     ? [...eventType].sort().join(",")
     : eventType;
+
+  const filterRef = useRef(filter);
+  useEffect(() => {
+    filterRef.current = filter;
+  });
 
   const [state, setState] = useState<EventState<T>>({
     event: null,
@@ -78,6 +88,7 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
             : incoming.type === eventType);
 
         if (!allowed) return;
+        if (filterRef.current && !filterRef.current(incoming)) return;
 
         setState((prev) => ({ ...prev, event: incoming as T }));
       } catch {
