@@ -123,16 +123,17 @@ function Wallet({ address }: { address: string }) {
 
 The default `T = NormalizedEvent` keeps the existing untyped behavior — pass `<T>` only when you want narrowing.
 
-Every render returns the *most recent* event. If you need history, accumulate it yourself in component state:
+Every render returns the *most recent* event. If you need history, use `useStellarHistory` instead of rolling your own event accumulation:
 
 ```tsx
-const [history, setHistory] = useState<NormalizedEvent[]>([]);
-const { event } = useStellarActivity(url, address);
-
-useEffect(() => {
-  if (event) setHistory((h) => [event, ...h].slice(0, 50));
-}, [event]);
+const { history, event, connected, error } = useStellarHistory(
+  url,
+  address,
+  { capacity: 50 }
+);
 ```
+
+`history` retains events in FIFO order and evicts the oldest event once the capacity is exceeded.
 
 ## Stable config
 

@@ -111,6 +111,63 @@ export function useStellarPayment(serverUrl: string, address: string) {
   );
 }
 
-export function useStellarActivity(serverUrl: string, address: string) {
-  return useStellarEvent(serverUrl, address, { event: "*" });
+export type UseActivityConfig = Pick<UseEventConfig, "token">;
+export type UseHistoryConfig = UseActivityConfig & {
+  /** Maximum number of events to retain in FIFO order. Defaults to 100. */
+  capacity?: number;
+};
+
+export type HistoryState<T extends NormalizedEvent = NormalizedEvent> =
+  EventState<T> & {
+    history: T[];
+  };
+
+export function useStellarActivity<
+  T extends NormalizedEvent = NormalizedEvent
+>(
+  serverUrl: string,
+  address: string,
+  options?: UseActivityConfig
+): EventState<T> {
+  return useStellarEvent<T>(serverUrl, address, {
+    event: "*",
+    token: options?.token,
+  });
+}
+
+export function useStellarHistory<
+  T extends NormalizedEvent = NormalizedEvent
+>(
+  serverUrl: string,
+  address: string,
+  options?: UseHistoryConfig
+): HistoryState<T> {
+  const { event, connected, error } = useStellarActivity<T>(serverUrl, address, {
+    token: options?.token,
+  });
+
+  const [history, setHistory] = useState<T[]>([]);
+  const capacity = Math.max(0, options?.capacity ?? 100);
+
+  useEffect(() => {
+    if (!event) return;
+
+    setHistory((prev) => {
+      const next = [...prev, event];
+      return next.length > capacity ? next.slice(next.length - capacity) : next;
+    });
+  }, [event, capacity]);
+
+  useEffect(() => {
+    if (capacity === 0) {
+      setHistory([]);
+      return;
+    }
+
+    setHistory((prev) =>
+      prev.length > capacity ? prev.slice(-capacity) : prev
+    );
+  }, [capacity]);
+
+  return { history, event, connected, error };
 }

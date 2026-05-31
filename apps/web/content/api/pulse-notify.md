@@ -104,6 +104,26 @@ import { useStellarActivity } from "@orbital/pulse-notify";
 const { event, connected } = useStellarActivity(serverUrl, address);
 ```
 
+## useStellarHistory
+
+Convenience hook for keeping a fixed-size FIFO history of recent events. Internally uses `useStellarActivity` and keeps the latest `capacity` events in memory.
+
+```tsx
+import { useStellarHistory } from "@orbital/pulse-notify";
+
+const { history, event, connected, error } = useStellarHistory(
+  serverUrl,
+  address,
+  { capacity: 50 }
+);
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `capacity` | `number` | `100` | Maximum number of events to retain in FIFO order |
+
+`history` is ordered from oldest to newest. When the callback receives a new event and the history is full, the oldest event is automatically removed.
+
 ## Type narrowing
 
 Pass a narrower union as `T` to get full IDE support and avoid manual casts:

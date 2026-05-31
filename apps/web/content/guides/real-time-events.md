@@ -126,16 +126,17 @@ type EventState<T = NormalizedEvent> = {
 };
 ```
 
-Every render returns the *most recent* event. If you need history, accumulate it in component state:
+Every render returns the *most recent* event. If you need history, use `useStellarHistory` instead of accumulating events in component state:
 
 ```tsx
-const [history, setHistory] = useState<NormalizedEvent[]>([]);
-const { event } = useStellarActivity(serverUrl, address);
-
-useEffect(() => {
-  if (event) setHistory((h) => [event, ...h].slice(0, 50));
-}, [event]);
+const { history, event, connected, error } = useStellarHistory(
+  serverUrl,
+  address,
+  { capacity: 50 }
+);
 ```
+
+`history` retains events in FIFO order, evicting the oldest event when the limit is exceeded.
 
 ## Type narrowing
 
