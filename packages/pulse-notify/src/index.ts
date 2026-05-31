@@ -14,6 +14,7 @@ export type EventState<T extends NormalizedEvent = NormalizedEvent> = {
   event: T | null;
   connected: boolean;
   error: string | null;
+  lastEventAt: string | null;
 };
 
 export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
@@ -54,6 +55,7 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
     event: null,
     connected: false,
     error: null,
+    lastEventAt: null,
   });
 
   useEffect(() => {
@@ -74,7 +76,11 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
 
           if (!allowed) return;
 
-          setState((prev) => ({ ...prev, event: incoming as T }));
+          setState((prev) => ({
+            ...prev,
+            event: incoming as T,
+            lastEventAt: incoming.timestamp ?? null,
+          }));
         },
         onParseError: () => {
           setState((prev) => ({ ...prev, error: "Failed to parse event" }));
@@ -142,9 +148,13 @@ export function useStellarHistory<
   address: string,
   options?: UseHistoryConfig
 ): HistoryState<T> {
-  const { event, connected, error } = useStellarActivity<T>(serverUrl, address, {
-    token: options?.token,
-  });
+  const { event, connected, error, lastEventAt } = useStellarActivity<T>(
+    serverUrl,
+    address,
+    {
+      token: options?.token,
+    }
+  );
 
   const [history, setHistory] = useState<T[]>([]);
   const capacity = Math.max(0, options?.capacity ?? 100);
@@ -169,5 +179,5 @@ export function useStellarHistory<
     );
   }, [capacity]);
 
-  return { history, event, connected, error };
+  return { history, event, connected, error, lastEventAt };
 }
