@@ -85,11 +85,11 @@ export function useStellarEvent<T extends NormalizedEvent = NormalizedEvent>(
         onParseError: () => {
           setState((prev) => ({ ...prev, error: "Failed to parse event" }));
         },
-        onError: () => {
+        onError: (message?: string) => {
           setState((prev) => ({
             ...prev,
             connected: false,
-            error: "Connection lost — retrying...",
+            error: message ?? "Connection lost — retrying...",
           }));
         },
       }

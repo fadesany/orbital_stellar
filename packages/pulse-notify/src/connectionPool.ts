@@ -1,3 +1,4 @@
+import { acquireWsConnection } from "./wsTransport.js";
 import type { NormalizedEvent } from "@orbital/pulse-core";
 
 type ConnectionKey = {
@@ -10,7 +11,7 @@ type ConnectionSubscriber = {
   onOpen: () => void;
   onEvent: (event: NormalizedEvent) => void;
   onParseError: () => void;
-  onError: () => void;
+  onError: (message?: string) => void;
 };
 
 type ConnectionEntry = {
@@ -43,6 +44,10 @@ export function acquireEventConnection(
   key: ConnectionKey,
   subscriber: ConnectionSubscriber
 ) {
+  if (key.serverUrl.startsWith("ws://") || key.serverUrl.startsWith("wss://")) {
+    return acquireWsConnection(key, subscriber);
+  }
+
   const poolKey = getConnectionKey(key);
   let entry = pool.get(poolKey);
 
@@ -69,7 +74,9 @@ export function acquireEventConnection(
 
     newEntry.source.onerror = () => {
       newEntry.connected = false;
-      notifySubscribers(newEntry, (current) => current.onError());
+      notifySubscribers(newEntry, (current) =>
+        current.onError("Connection lost — retrying...")
+      );
     };
 
     pool.set(poolKey, newEntry);
