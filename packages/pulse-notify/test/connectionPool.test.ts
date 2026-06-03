@@ -61,6 +61,12 @@ describe("connectionPool", () => {
     expect(MockEventSource.instances.length).toBe(1);
     expect(__getConnectionPoolSizeForTests()).toBe(1);
 
+    expect(first.connected).toBe(false);
+    expect(second.connected).toBe(false);
+    MockEventSource.instances[0]?.onopen?.();
+    expect(first.connected).toBe(true);
+    expect(second.connected).toBe(true);
+
     MockEventSource.instances[0]?.onmessage?.({
       data: JSON.stringify({ type: "payment.received" }),
     });
